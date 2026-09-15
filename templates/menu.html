@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>智慧菜單與過敏原提醒</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: #1a0000;
+      color: #fff;
+      overflow-x: hidden;
+      overflow-y: auto;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    canvas#bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      background: radial-gradient(ellipse at bottom, #2b0000 0%, #000000 100%);
+    }
+
+    .container {
+      max-width: 700px;
+      width: 100%;
+      padding: 60px 20px;
+    }
+
+    .card {
+      background: rgba(0, 0, 0, 0.85);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(255, 80, 0, 0.9);
+      border: 2px solid #ff6600;
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #ffae00;
+      text-shadow: 0 0 10px #ffae00;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      font-size: 14px;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .button-row button {
+      background: linear-gradient(90deg, #ff6600, #ffae00);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #ff5500;
+      transition: all 0.3s ease;
+    }
+
+    .button-row button:hover {
+      box-shadow: 0 0 20px #ffff33, 0 0 40px #ff6600;
+      transform: scale(1.05);
+    }
+
+    .section {
+      background: #111;
+      padding: 20px;
+      border-radius: 12px;
+      border-left: 5px solid #ffaa00;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      color: #ffaa00;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    p, li {
+      font-size: 14px;
+      color: #ffeec0;
+      line-height: 1.6;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="container">
+    <div class="card">
+      <h2>🍽️ 智慧菜單與過敏原提醒</h2>
+
+      <!-- 上傳表單 -->
+      <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <div class="button-row">
+          <button type="submit">開始分析</button>
+          <button type="button" onclick="window.location.href='/'">← 返回首頁</button>
+        </div>
+      </form>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="section" style="border-left-color:#ff5555">
+            {% for msg in messages %}<p>{{ msg }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- OCR 原文 -->
+      {% if original_text %}
+        <div class="section">
+          <h3>📝 OCR 原文：</h3>
+          <p>{{ original_text }}</p>
+        </div>
+      {% endif %}
+
+      <!-- 翻譯 -->
+      {% if translated_text %}
+        <div class="section">
+          <h3>🌐 翻譯結果（中文）：</h3>
+          <p>{{ translated_text }}</p>
+        </div>
+      {% endif %}
+
+      <!-- 過敏原 -->
+      {% if allergens %}
+        <div class="section" style="border-left-color:#ff4444">
+          <h3>🚨 偵測到的過敏原：</h3>
+          <ul>
+            {% for a in allergens %}<li>{{ a }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <div class="section">
+          <h3>✅ 沒有發現常見過敏原</h3>
+        </div>
+      {% endif %}
+
+      <!-- 語音播放 -->
+      {% if audio_file %}
+        <div class="section" style="border-left-color:#ffaa44">
+          <h3>🔊 中文語音朗讀：</h3>
+          <audio controls>
+            <source src="{{ url_for('static', filename='audio/' + audio_file) }}" type="audio/mpeg">
+            您的瀏覽器不支援 audio。
+          </audio>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 🔥 粒子動畫 -->
+  <script>
+    const canvas = document.getElementById("bgCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    const particles = [];
+    const max = 100;
+    const colors = ["#ffaa00", "#ff6600", "#ff3300", "#ffffff"];
+
+    for (let i = 0; i < max; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2 + 1,
+        d: Math.random() * max,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+
+    let angle = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < max; i++) {
+        const p = particles[i];
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.8;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2, true);
+        ctx.fill();
+      }
+      update();
+      requestAnimationFrame(draw);
+    }
+
+    function update() {
+      angle += 0.01;
+      for (let i = 0; i < max; i++) {
+        const p = particles[i];
+        p.y += Math.cos(angle + p.d) + 0.5;
+        p.x += Math.sin(angle) * 0.5;
+        if (p.y > canvas.height || p.x > canvas.width || p.x < 0) {
+          p.y = 0;
+          p.x = Math.random() * canvas.width;
+        }
+      }
+    }
+
+    draw();
+  </script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>圖片翻譯與語音</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: #1a0000;
+      color: #fff;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    /* 🔥 粒子背景畫布 */
+    canvas#bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      background: radial-gradient(ellipse at bottom, #2b0000 0%, #000000 100%);
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(255, 80, 0, 0.9);
+      width: 400px;
+      text-align: center;
+      border: 2px solid #ff6600;
+      z-index: 1;
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #ffae00;
+      text-shadow: 0 0 10px #ffae00;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .button-row button {
+      background: linear-gradient(90deg, #ff6600, #ffae00);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #ff5500;
+      transition: all 0.3s ease;
+    }
+
+    .button-row button:hover {
+      box-shadow: 0 0 20px #ffff33, 0 0 40px #ff6600;
+      transform: scale(1.05);
+    }
+
+    img {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px #ff6600;
+    }
+
+    p {
+      font-size: 16px;
+      margin-top: 15px;
+      color: #ffddaa;
+    }
+
+    audio {
+      margin-top: 20px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🔥 背景粒子畫布 -->
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="container">
+    <div class="card">
+      <h2>📷 圖片翻譯與語音</h2>
+
+      <form method="POST">
+        <input type="text" name="image_url" placeholder="請輸入圖片 URL" required />
+
+        <div class="button-row">
+          <button type="submit">送出</button>
+          <button type="button" onclick="window.location.href='/'">← 返回首頁</button>
+        </div>
+      </form>
+
+      {% if image_url %}
+        <img src="{{ image_url }}" alt="圖片">
+      {% endif %}
+
+      {% if description %}
+        <p>📝 描述：{{ description }}</p>
+      {% endif %}
+
+      {% if translation %}
+        <p>🌐 中文翻譯：{{ translation }}</p>
+      {% endif %}
+
+      {% if audio_file %}
+        <p>🔊 中文語音朗讀：</p>
+        <audio controls>
+          <source src="{{ url_for('static', filename='audio/' + audio_file) }}" type="audio/mpeg">
+          您的瀏覽器不支援 audio 標籤。
+        </audio>
+      {% endif %}
+    </div>
+  </div>
+
+    <!-- 🔥 引入 particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": { "value": 60 },
+        "color": { "value": "#ff6600" },
+        "shape": { "type": "circle" },
+        "opacity": {
+          "value": 0.6,
+          "random": true
+        },
+        "size": {
+          "value": 5,
+          "random": true
+        },
+        "move": {
+          "enable": true,
+          "speed": 2,
+          "direction": "top",
+          "straight": false
+        }
+      },
+      "interactivity": {
+        "events": {
+          "onhover": { "enable": true, "mode": "repulse" }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
+</body>
+</html>
